@@ -9,6 +9,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.provider.BaseColumns;
+import android.util.Log;
 
 /**
  * Not strictly necessary to have a content provider as we are within our own
@@ -35,19 +36,15 @@ public class TanktopContentProvider extends ContentProvider
   @Override
   public int delete(Uri uri, String selection, String[] selectionArgs)
   {
+
     int match = sUriMatcher.match(uri);
     String table = getTableForUri(match, uri);
     selection = modifySelectionForUri(match, uri, selection);
 
+    Log.d(TAG, "delete " + table + " " + selection);
+
     SQLiteDatabase db = mOpenHelper.getWritableDatabase();
-    try
-    {
-      return db.delete(table, selection, selectionArgs);
-    }
-    finally
-    {
-      db.close();
-    }
+    return db.delete(table, selection, selectionArgs);
   }
 
   @Override
@@ -67,20 +64,14 @@ public class TanktopContentProvider extends ContentProvider
   @Override
   public Uri insert(Uri uri, ContentValues values)
   {
+    Log.d(TAG, "Insert " + uri);
     int match = sUriMatcher.match(uri);
     String table = getTableForUri(match, uri);
 
     SQLiteDatabase db = mOpenHelper.getWritableDatabase();
-    try
-    {
-      long id = db.insert(table, null, values);
+    long id = db.insert(table, null, values);
 
-      return ContentUris.withAppendedId(uri, id);
-    }
-    finally
-    {
-      db.close();
-    }
+    return ContentUris.withAppendedId(uri, id);
   }
 
   @Override
@@ -99,14 +90,15 @@ public class TanktopContentProvider extends ContentProvider
     selection = modifySelectionForUri(match, uri, selection);
 
     SQLiteDatabase db = mOpenHelper.getReadableDatabase();
-    try
-    {
-      return db.query(table, projection, selection, selectionArgs, null, null, sortOrder);
-    }
-    finally
-    {
-      db.close();
-    }
+    Log.d(TAG, "query " + table + " " + selection);
+    Cursor cursor = db.query(table, projection, selection, selectionArgs, null, null, sortOrder);
+    Log.d(TAG, "Cursor " + cursor.getCount());
+
+    // We set the notification URI here.  We don't kick it ourselves though - we leave that
+    // to the code that makes changes
+    cursor.setNotificationUri(getContext().getContentResolver(), uri);
+
+    return cursor;
   }
 
   @Override
@@ -118,14 +110,7 @@ public class TanktopContentProvider extends ContentProvider
     selection = modifySelectionForUri(match, uri, selection);
 
     SQLiteDatabase db = mOpenHelper.getWritableDatabase();
-    try
-    {
-      return db.update(table, values, selection, selectionArgs);
-    }
-    finally
-    {
-      db.close();
-    }
+    return db.update(table, values, selection, selectionArgs);
   }
 
   private String getTableForUri(int match, Uri uri)

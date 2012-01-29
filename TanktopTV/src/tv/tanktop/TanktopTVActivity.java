@@ -1,9 +1,9 @@
 package tv.tanktop;
 
-import android.app.Activity;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 
-public class TanktopTVActivity extends Activity
+public class TanktopTVActivity extends FragmentActivity
 {
   private TanktopContext mContext;
   @Override
@@ -15,6 +15,9 @@ public class TanktopTVActivity extends Activity
 
     setContentView(R.layout.main);
 
-    new RefreshWatchlistTast(mContext).execute();
+    if (savedInstanceState == null)
+    {
+      new RefreshWatchlistTast(mContext).execute();
+    }
   }
 }

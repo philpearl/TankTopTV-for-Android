@@ -11,11 +11,13 @@ import tv.tanktop.db.DBDefinition.WatchListTable;
 import tv.tanktop.db.TanktopContentProvider;
 import tv.tanktop.net.HttpLayer;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
 
+// TODO: Threadedness
 public class RefreshWatchlistTast extends AsyncTask<String, Void, Void>
 {
   private static final String TAG = "RefreshWatchList";
@@ -46,11 +48,13 @@ public class RefreshWatchlistTast extends AsyncTask<String, Void, Void>
       JSONArray array = watchlist.getJSONArray("watchlist");
 
       ContentResolver cr = mContext.getContentResolver();
-      ContentValues values = new ContentValues(4);
+      ContentValues values = new ContentValues(5);
 
-      // Clear out all the old items
-      cr.delete(TanktopContentProvider.WATCHLIST_CONTENT_URI, "1=1",null);
+      // Mark items as untouched
+      values.put(WatchListTable.COL_TOUCHED, 0);
+      cr.update(TanktopContentProvider.WATCHLIST_CONTENT_URI, values, null, null);
 
+      values.put(WatchListTable.COL_TOUCHED, 1);
       long lastId = -1;
       for (int index = 0; index < array.length(); index++)
       {
@@ -67,10 +71,19 @@ public class RefreshWatchlistTast extends AsyncTask<String, Void, Void>
           values.put(WatchListTable.COL_IMAGE, prog.getString("image"));
           values.put(WatchListTable.COL_SYNOPSIS, prog.getString("synopsis"));
 
-          Uri uri = cr.insert(TanktopContentProvider.WATCHLIST_CONTENT_URI, values);
-          Log.d(TAG, "uri " + uri);
+          int updated = cr.update(ContentUris.withAppendedId(TanktopContentProvider.WATCHLIST_CONTENT_URI, id), values, null, null);
+          Log.d(TAG, "updated " + updated);
+          if (updated == 0)
+          {
+            Uri uri = cr.insert(TanktopContentProvider.WATCHLIST_CONTENT_URI, values);
+            Log.d(TAG, "uri " + uri);
+          }
         }
       }
+
+      // Delete anything that's still untouched
+      int deleted = cr.delete(TanktopContentProvider.WATCHLIST_CONTENT_URI, WatchListTable.COL_TOUCHED + "=0", null);
+      Log.d(TAG, "deleted " + deleted);
 
       cr.notifyChange(TanktopContentProvider.WATCHLIST_CONTENT_URI, null);
     }
