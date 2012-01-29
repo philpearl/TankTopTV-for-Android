@@ -18,18 +18,17 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 // TODO: Threadedness
-public class RefreshWatchlistTast extends AsyncTask<String, Void, Void>
+public class RefreshWatchlistTask extends AsyncTask<String, Void, Void>
 {
   private static final String TAG = "RefreshWatchList";
 
   private final TanktopContext mContext;
-  private final HttpLayer mHttpLayer;
   private final TanktopStore mStore;
 
-  public RefreshWatchlistTast(TanktopContext context)
+  public RefreshWatchlistTask(TanktopContext context)
   {
     mContext = context;
-    mHttpLayer = mContext.getHttpLayer();
+
     mStore = mContext.getStore();
   }
 
@@ -37,11 +36,13 @@ public class RefreshWatchlistTast extends AsyncTask<String, Void, Void>
   protected Void doInBackground(String... params)
   {
     Log.d(TAG, "doInBackground");
+    // New HTTP layer for each call
+    HttpLayer httpLayer = mContext.getHttpLayer();
     try
     {
-      mHttpLayer.login(mStore.getUserName(), mStore.getPassword());
+      httpLayer.login(mStore.getUserName(), mStore.getPassword());
 
-      JSONObject watchlist = mHttpLayer.getWatchList();
+      JSONObject watchlist = httpLayer.getWatchList();
 
       Log.d(TAG, watchlist.toString(2));
 
@@ -98,6 +99,10 @@ public class RefreshWatchlistTast extends AsyncTask<String, Void, Void>
     catch (JSONException e)
     {
       Log.e(TAG, "Error getting watchlist", e);
+    }
+    finally
+    {
+      httpLayer.onDestroy();
     }
 
     return null;

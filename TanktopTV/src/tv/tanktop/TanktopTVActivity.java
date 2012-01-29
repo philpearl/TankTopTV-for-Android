@@ -6,6 +6,7 @@ import android.support.v4.app.FragmentActivity;
 public class TanktopTVActivity extends FragmentActivity
 {
   private TanktopContext mContext;
+  private RefreshWatchlistTask mRefreshWatchlistTask;
   @Override
   public void onCreate(Bundle savedInstanceState)
   {
@@ -17,7 +18,18 @@ public class TanktopTVActivity extends FragmentActivity
 
     if (savedInstanceState == null)
     {
-      new RefreshWatchlistTast(mContext).execute();
+      mRefreshWatchlistTask = new RefreshWatchlistTask(mContext);
+      mRefreshWatchlistTask.execute();
     }
+  }
+
+  @Override
+  protected void onDestroy()
+  {
+    if (isFinishing())
+    {
+      mRefreshWatchlistTask.cancel(false);
+    }
+    super.onDestroy();
   }
 }

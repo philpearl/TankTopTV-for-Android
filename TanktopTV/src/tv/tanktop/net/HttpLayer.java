@@ -49,6 +49,11 @@ public class HttpLayer
     mHttpContext.setAttribute(ClientContext.COOKIE_STORE, mCookieStore);
   }
 
+  public void onDestroy()
+  {
+    mHttpClient.close();
+  }
+
   /**
    * Log into the tanktop server
    * @param userName
