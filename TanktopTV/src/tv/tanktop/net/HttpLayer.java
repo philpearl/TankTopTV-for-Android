@@ -21,6 +21,8 @@ import org.apache.http.protocol.HttpContext;
 import org.json.JSONObject;
 
 import tv.tanktop.TanktopContext;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.http.AndroidHttpClient;
 import android.util.Log;
 
@@ -98,6 +100,28 @@ public class HttpLayer
     HttpGet get = new HttpGet(mBaseUrl + "/api/v1/watchlist");
 
     return mHttpClient.execute(get, mResponseHandler, mHttpContext);
+  }
+
+  public Drawable getImage(String url) throws ClientProtocolException, IOException
+  {
+    HttpGet get = new HttpGet(url);
+
+    ResponseHandler<Drawable> responseHandler = new ResponseHandler<Drawable>()
+    {
+      public Drawable handleResponse(HttpResponse response)
+          throws ClientProtocolException, IOException
+      {
+        StatusLine statusLine = response.getStatusLine();
+        Log.d(TAG, "Have response " + statusLine);
+        if (statusLine.getStatusCode() > 299)
+        {
+          throw new HttpResponseException(statusLine.getStatusCode(), statusLine.getReasonPhrase());
+        }
+        return BitmapDrawable.createFromStream(response.getEntity().getContent(), "dummy.png");
+      }
+    };
+
+    return mHttpClient.execute(get, responseHandler);
   }
 
 

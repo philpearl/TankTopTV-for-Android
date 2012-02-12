@@ -15,7 +15,7 @@ public class TanktopContext extends ContextWrapper
   {
     super(base);
 
-    mBaseUrl = "http://192.168.1.18:8080";
+    mBaseUrl = "http://192.168.1.14:8080";
   }
 
   public String getBaseUrl()
@@ -35,6 +35,11 @@ public class TanktopContext extends ContextWrapper
       mHttpLayer = new HttpLayer(this);
     }
     return mHttpLayer;
+  }
+
+  public HttpLayer newHttpLayer()
+  {
+    return new HttpLayer(this);
   }
 
   public synchronized TanktopStore getStore()

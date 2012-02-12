@@ -23,6 +23,11 @@ public class TanktopTVActivity extends FragmentActivity
     }
   }
 
+  TanktopContext getContext()
+  {
+    return mContext;
+  }
+
   @Override
   protected void onDestroy()
   {

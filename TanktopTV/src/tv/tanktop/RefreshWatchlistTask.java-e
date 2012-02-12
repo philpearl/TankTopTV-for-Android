@@ -56,29 +56,26 @@ public class RefreshWatchlistTask extends AsyncTask<String, Void, Void>
       cr.update(TanktopContentProvider.WATCHLIST_CONTENT_URI, values, null, null);
 
       values.put(WatchListTable.COL_TOUCHED, 1);
-      long lastId = -1;
       for (int index = 0; index < array.length(); index++)
       {
-        JSONArray item = array.getJSONArray(index);
-        JSONObject prog = item.getJSONObject(0);
+        JSONObject prog = array.getJSONObject(index);
 
         // For now we try to avoid duplicate progs
         long id = prog.getLong("id");
-        if (id != lastId)
-        {
-          lastId = id;
-          values.put(WatchListTable.COL_PROGRAMME_ID, id);
-          values.put(WatchListTable.COL_PROGRAMME_NAME, prog.getString("name"));
-          values.put(WatchListTable.COL_IMAGE, prog.getString("image"));
-          values.put(WatchListTable.COL_SYNOPSIS, prog.getString("synopsis"));
+        values.put(WatchListTable.COL_PROGRAMME_ID, id);
+        values.put(WatchListTable.COL_PROGRAMME_NAME, prog.getString("name"));
+        values.put(WatchListTable.COL_IMAGE, prog.getString("image"));
+        values.put(WatchListTable.COL_SYNOPSIS, prog.getString("synopsis"));
 
-          int updated = cr.update(ContentUris.withAppendedId(TanktopContentProvider.WATCHLIST_CONTENT_URI, id), values, null, null);
-          Log.d(TAG, "updated " + updated);
-          if (updated == 0)
-          {
-            Uri uri = cr.insert(TanktopContentProvider.WATCHLIST_CONTENT_URI, values);
-            Log.d(TAG, "uri " + uri);
-          }
+        // We've also got a list of episodes of the programme in the watchlist
+        // prog.getJSONArray("episodes")
+
+        int updated = cr.update(ContentUris.withAppendedId(TanktopContentProvider.WATCHLIST_CONTENT_URI, id), values, null, null);
+        Log.d(TAG, "updated " + updated);
+        if (updated == 0)
+        {
+          Uri uri = cr.insert(TanktopContentProvider.WATCHLIST_CONTENT_URI, values);
+          Log.d(TAG, "uri " + uri);
         }
       }
 

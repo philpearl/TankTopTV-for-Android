@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="prog_image">100dp</dimen>
+    <dimen name="prog_image_margin">10dp</dimen>
+    <dimen name="text_margin">5dp</dimen>
+    
+</resources>

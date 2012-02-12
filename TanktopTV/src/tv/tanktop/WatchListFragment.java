@@ -2,8 +2,10 @@ package tv.tanktop;
 
 import tv.tanktop.db.DBDefinition.WatchListTable;
 import tv.tanktop.db.TanktopContentProvider;
+import tv.tanktop.utils.NetImageLoader;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
@@ -20,11 +22,15 @@ public class WatchListFragment extends ListFragment implements LoaderCallbacks<C
   {
     public static final String[] PROJECTION = new String[] {
       WatchListTable.COL_PROGRAMME_ID,
-      WatchListTable.COL_PROGRAMME_NAME
+      WatchListTable.COL_PROGRAMME_NAME,
+      WatchListTable.COL_SYNOPSIS,
+      WatchListTable.COL_IMAGE,
     };
 
     public static final int COL_PROG_ID = 0;
     public static final int COL_PROG_NAME = 1;
+    public static final int COL_SYNOPSIS = 2;
+    public static final int COL_IMAGE = 3;
 
   }
 
@@ -34,7 +40,8 @@ public class WatchListFragment extends ListFragment implements LoaderCallbacks<C
     super.onCreate(savedInstanceState);
     Log.d(TAG, "onCreate");
 
-    mAdapter = new WatchListAdapter(getActivity());
+    TanktopTVActivity activity = (TanktopTVActivity)getActivity();
+    mAdapter = new WatchListAdapter(activity, new NetImageLoader(activity.getContext(), new Handler()));
     setListAdapter(mAdapter);
 
     setRetainInstance(true);

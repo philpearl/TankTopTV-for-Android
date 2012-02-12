@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <ImageView
+        android:id="@+id/progImage"
+        android:layout_width="@dimen/prog_image"
+        android:layout_height="@dimen/prog_image"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_margin="@dimen/prog_image_margin"
+        android:src="@android:drawable/ic_dialog_alert" />
+
+    <TextView
+        android:id="@+id/progName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@id/progImage"
+        android:layout_toRightOf="@id/progImage"
+        android:gravity="center_vertical"
+        android:text="Prog Name" 
+        android:textAppearance="@android:style/TextAppearance.Large"
+        />
+    
+    <TextView
+        android:id="@+id/progExpires"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/progName"
+        android:text="(2 days)"
+        android:layout_alignBaseline="@id/progName"
+        android:layout_marginLeft="@dimen/text_margin"
+         
+        />
+    
+    <TextView 
+        android:id="@+id/progSynopsis"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="synopsis goes on for some time"
+        android:textAppearance="@android:style/TextAppearance.Small"
+        android:layout_below="@id/progName"
+        android:layout_marginTop="@dimen/text_margin"
+        android:layout_marginRight="@dimen/text_margin"
+        android:layout_marginBottom="@dimen/text_margin"
+        android:layout_alignLeft="@id/progName"
+        />
+        
+
+</RelativeLayout>
