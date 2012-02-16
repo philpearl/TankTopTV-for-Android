@@ -104,6 +104,7 @@ public class HttpLayer
 
   public Drawable getImage(String url) throws ClientProtocolException, IOException
   {
+    Log.i(TAG, "get " + url);
     HttpGet get = new HttpGet(url);
 
     ResponseHandler<Drawable> responseHandler = new ResponseHandler<Drawable>()

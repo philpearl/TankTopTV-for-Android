@@ -172,7 +172,7 @@ public abstract class AbstractImageLoader<T>
         {
           Log.e(TAG, "Could not decode picture for " + id, e);
         }
-        catch (IOException e)
+        catch (Exception e)
         {
         }
         if (image == null)

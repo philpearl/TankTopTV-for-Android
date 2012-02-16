@@ -15,6 +15,7 @@ public class DBOpenHelper extends SQLiteOpenHelper
   public void onCreate(SQLiteDatabase db)
   {
     db.execSQL(DBDefinition.WatchListTable.TABLE.getCreateString());
+    db.execSQL(DBDefinition.WatchListEpisodeTable.TABLE.getCreateString());
   }
 
   @Override
@@ -24,11 +25,17 @@ public class DBOpenHelper extends SQLiteOpenHelper
     {
       // Can't go back
       db.execSQL(DBDefinition.WatchListTable.TABLE.getDropString());
+      db.execSQL(DBDefinition.WatchListEpisodeTable.TABLE.getDropString());
       onCreate(db);
     }
     else
     {
-      throw new UnsupportedOperationException("Implement DB upgrade");
+      // Just ditch in this case too for now
+      db.execSQL(DBDefinition.WatchListTable.TABLE.getDropString());
+      db.execSQL(DBDefinition.WatchListEpisodeTable.TABLE.getDropString());
+      onCreate(db);
+
+      //throw new UnsupportedOperationException("Implement DB upgrade");
     }
   }
 }

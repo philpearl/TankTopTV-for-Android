@@ -3,6 +3,7 @@ package tv.tanktop;
 import tv.tanktop.db.DBDefinition.WatchListTable;
 import tv.tanktop.db.TanktopContentProvider;
 import tv.tanktop.utils.NetImageLoader;
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
@@ -11,12 +12,14 @@ import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.util.Log;
+import android.view.View;
+import android.widget.ListView;
 
 public class WatchListFragment extends ListFragment implements LoaderCallbacks<Cursor>
 {
   private static final String TAG = "WatchListFragment";
 
-  private WatchListAdapter mAdapter;
+  private TimeCursorAdapter mAdapter;
 
   public interface WATCHLIST_QUERY
   {
@@ -25,12 +28,16 @@ public class WatchListFragment extends ListFragment implements LoaderCallbacks<C
       WatchListTable.COL_PROGRAMME_NAME,
       WatchListTable.COL_SYNOPSIS,
       WatchListTable.COL_IMAGE,
+      WatchListTable.COL_EXPIRES,
+      WatchListTable.COL_EPISODE_COUNT,
     };
 
     public static final int COL_PROG_ID = 0;
     public static final int COL_PROG_NAME = 1;
     public static final int COL_SYNOPSIS = 2;
     public static final int COL_IMAGE = 3;
+    public static final int COL_EXPIRES = 4;
+    public static final int COL_EPISODE_COUNT = 5;
 
   }
 
@@ -40,8 +47,9 @@ public class WatchListFragment extends ListFragment implements LoaderCallbacks<C
     super.onCreate(savedInstanceState);
     Log.d(TAG, "onCreate");
 
-    TanktopTVActivity activity = (TanktopTVActivity)getActivity();
-    mAdapter = new WatchListAdapter(activity, new NetImageLoader(activity.getContext(), new Handler()));
+    TTContextHolder activity = (TTContextHolder)getActivity();
+    TanktopContext context = activity.getContext();
+    mAdapter = new WatchListAdapter(context, new NetImageLoader(context, new Handler()));
     setListAdapter(mAdapter);
 
     setRetainInstance(true);
@@ -84,5 +92,15 @@ public class WatchListFragment extends ListFragment implements LoaderCallbacks<C
   public void onLoaderReset(Loader<Cursor> arg0)
   {
     mAdapter.swapCursor(null);
+  }
+
+  @Override
+  public void onListItemClick(ListView l, View v, int position, long id)
+  {
+    Cursor cursor = (Cursor) getListAdapter().getItem(position);
+
+    getActivity().startActivity(new Intent(getActivity(), WLEpisodeActivity.class)
+      .putExtra(WLEpisodeFragment.ARG_PG_ID, id)
+      .putExtra(WLEpisodeFragment.ARG_PG_NAME, cursor.getString(WATCHLIST_QUERY.COL_PROG_NAME)));
   }
 }

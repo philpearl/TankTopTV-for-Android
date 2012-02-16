@@ -1,5 +1,7 @@
 package tv.tanktop.db;
 
+import tv.tanktop.db.DBDefinition.WatchListEpisodeTable;
+import tv.tanktop.db.DBDefinition.WatchListTable;
 import android.content.ContentProvider;
 import android.content.ContentResolver;
 import android.content.ContentUris;
@@ -8,7 +10,6 @@ import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
-import android.provider.BaseColumns;
 import android.util.Log;
 
 /**
@@ -21,14 +22,21 @@ public class TanktopContentProvider extends ContentProvider
   public static final String AUTHORITY = "tv.tanktop.provider";
 
   public static final Uri WATCHLIST_CONTENT_URI = new Uri.Builder().scheme(ContentResolver.SCHEME_CONTENT).authority(AUTHORITY).path("/watchlist").build();
+  public static final Uri WATCHLIST_EPISODE_CONTENT_URI = new Uri.Builder().scheme(ContentResolver.SCHEME_CONTENT).authority(AUTHORITY).path("/watchlist/episodes").build();
 
   private static final UriMatcher sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
   private static final int MATCH_WATCHLIST = 1;
   private static final int MATCH_WATCHLIST_ID = 2;
+  private static final int MATCH_WATCHLIST_ID_EPISODES = 3; //TODO implement this match
+  private static final int MATCH_WATCHLIST_EPISODES = 4; //TODO implement this match
+  private static final int MATCH_WATCHLIST_EPISODES_ID = 5; //TODO implement this match
   static
   {
     sUriMatcher.addURI(AUTHORITY, "watchlist", MATCH_WATCHLIST);
     sUriMatcher.addURI(AUTHORITY, "watchlist/#", MATCH_WATCHLIST_ID);
+    sUriMatcher.addURI(AUTHORITY, "watchlist/#/episodes", MATCH_WATCHLIST_ID_EPISODES);
+    sUriMatcher.addURI(AUTHORITY, "watchlist/episodes", MATCH_WATCHLIST_EPISODES);
+    sUriMatcher.addURI(AUTHORITY, "watchlist/episodes/#", MATCH_WATCHLIST_EPISODES_ID);
   }
 
   private DBOpenHelper mOpenHelper;
@@ -57,6 +65,12 @@ public class TanktopContentProvider extends ContentProvider
       return "vnd.android.cursor.dir/watchlist";
     case MATCH_WATCHLIST_ID:
       return "vnd.android.cursor.item/watchlist";
+    case MATCH_WATCHLIST_EPISODES:
+      return "vnd.android.cursor.dir/watchlistepisode";
+    case MATCH_WATCHLIST_ID_EPISODES:
+      return "vnd.android.cursor.dir/watchlistepisode";
+    case MATCH_WATCHLIST_EPISODES_ID:
+      return "vnd.android.cursor.item/watchlistepisode";
     }
     return null;
   }
@@ -121,6 +135,11 @@ public class TanktopContentProvider extends ContentProvider
     case MATCH_WATCHLIST:
       return DBDefinition.WatchListTable.NAME;
 
+    case MATCH_WATCHLIST_EPISODES:
+    case MATCH_WATCHLIST_ID_EPISODES:
+    case MATCH_WATCHLIST_EPISODES_ID:
+      return DBDefinition.WatchListEpisodeTable.NAME;
+
     default:
       throw new IllegalArgumentException("Uri not recognised " + uri);
     }
@@ -128,19 +147,41 @@ public class TanktopContentProvider extends ContentProvider
 
   private String modifySelectionForUri(int match, Uri uri, String selection)
   {
+    StringBuilder sb = new StringBuilder();
+
+    if ((match == MATCH_WATCHLIST) || (match == MATCH_WATCHLIST_EPISODES))
+    {
+      // No modification
+      return selection;
+    }
+
+    if (selection != null)
+    {
+      sb.append("(");
+    }
+
     switch (match)
     {
     case MATCH_WATCHLIST_ID:
       // Alter query to ensure the ID is selected
-      if (selection != null)
-      {
-        return "(" + BaseColumns._ID + " = " + uri.getLastPathSegment() + ") AND (" + selection + ")";
-      }
-      return BaseColumns._ID + " = " + uri.getLastPathSegment();
+      sb.append(WatchListTable.COL_PROGRAMME_ID).append(" = ").append(uri.getLastPathSegment());
+      break;
 
-    default:
-      return selection;
+    case MATCH_WATCHLIST_ID_EPISODES:
+      // Episodes for the given programme
+      sb.append(WatchListEpisodeTable.COL_PROGRAMME_ID).append(" = ").append(uri.getPathSegments().get(1));
+      break;
+
+    case MATCH_WATCHLIST_EPISODES_ID:
+      sb.append(WatchListEpisodeTable.COL_EPISODE_ID).append(" = ").append(uri.getLastPathSegment());
+      break;
     }
 
+    if (selection != null)
+    {
+      sb.append(") AND (").append(selection).append(")");
+    }
+
+    return sb.toString();
   }
 }

@@ -3,7 +3,7 @@ package tv.tanktop;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 
-public class TanktopTVActivity extends FragmentActivity
+public class TanktopTVActivity extends FragmentActivity implements TTContextHolder
 {
   private TanktopContext mContext;
   private RefreshWatchlistTask mRefreshWatchlistTask;
@@ -23,7 +23,7 @@ public class TanktopTVActivity extends FragmentActivity
     }
   }
 
-  TanktopContext getContext()
+  public TanktopContext getContext()
   {
     return mContext;
   }
@@ -31,7 +31,7 @@ public class TanktopTVActivity extends FragmentActivity
   @Override
   protected void onDestroy()
   {
-    if (isFinishing())
+    if ((isFinishing()) && (mRefreshWatchlistTask != null))
     {
       mRefreshWatchlistTask.cancel(false);
     }

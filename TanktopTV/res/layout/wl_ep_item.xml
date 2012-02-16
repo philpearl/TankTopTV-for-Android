@@ -18,7 +18,7 @@
         android:layout_height="wrap_content"
         android:layout_alignBottom="@id/image"
         android:layout_toRightOf="@id/image"
-        android:text="Prog Name" 
+        android:text="Ep Name" 
         android:textAppearance="@android:style/TextAppearance.Large"
         android:background="#FF202020"
         />
@@ -33,16 +33,6 @@
         android:text="Jan 12, 2012"
         />
 
-    <TextView
-        android:id="@+id/epCount"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_alignLeft="@id/name"
-        android:layout_marginTop="@dimen/text_margin"
-        android:text="(3)"
-        />
-    
     <TextView 
         android:id="@+id/synopsis"
         android:layout_width="match_parent"

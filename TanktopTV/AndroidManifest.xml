@@ -20,6 +20,10 @@
             </intent-filter>
         </activity>
         
+        <activity
+            android:name=".WLEpisodeActivity"
+            />
+        
         <provider 
             android:authorities="tv.tanktop.provider"
             android:name="tv.tanktop.db.TanktopContentProvider"
