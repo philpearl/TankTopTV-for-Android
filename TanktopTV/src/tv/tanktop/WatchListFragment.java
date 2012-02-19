@@ -20,6 +20,7 @@ public class WatchListFragment extends ListFragment implements LoaderCallbacks<C
   private static final String TAG = "WatchListFragment";
 
   private TimeCursorAdapter mAdapter;
+  private NetImageLoader mImageLoader;
 
   public interface WATCHLIST_QUERY
   {
@@ -49,7 +50,8 @@ public class WatchListFragment extends ListFragment implements LoaderCallbacks<C
 
     TTContextHolder activity = (TTContextHolder)getActivity();
     TanktopContext context = activity.getContext();
-    mAdapter = new WatchListAdapter(context, new NetImageLoader(context, new Handler()));
+    mImageLoader = new NetImageLoader(context, new Handler());
+    mAdapter = new WatchListAdapter(context, mImageLoader);
     setListAdapter(mAdapter);
 
     setRetainInstance(true);
@@ -66,6 +68,13 @@ public class WatchListFragment extends ListFragment implements LoaderCallbacks<C
       getLoaderManager().initLoader(0, null, this);
       setListShown(false);
     }
+  }
+
+  @Override
+  public void onDestroy()
+  {
+    mImageLoader.onDestroy();
+    super.onDestroy();
   }
 
   public Loader<Cursor> onCreateLoader(int id, Bundle args)

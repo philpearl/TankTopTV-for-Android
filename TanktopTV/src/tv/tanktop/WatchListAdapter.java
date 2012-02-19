@@ -7,9 +7,10 @@ import android.content.Context;
 import android.database.Cursor;
 import android.text.Html;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.TextView;
 
-public class WatchListAdapter extends TimeCursorAdapter
+public class WatchListAdapter extends TimeCursorAdapter implements OnClickListener
 {
   public WatchListAdapter(Context context, NetImageLoader imageLoader)
   {
@@ -49,6 +50,7 @@ public class WatchListAdapter extends TimeCursorAdapter
   protected void setupTag(TimeCursorAdapter.Tag tag, View v)
   {
     super.setupTag(tag, v);
-    ((Tag)tag).mEpCount = (TextView) v.findViewById(R.id.epCount);
+    Tag ttag = (Tag)tag;
+    ttag.mEpCount = (TextView) v.findViewById(R.id.epCount);
   }
 }

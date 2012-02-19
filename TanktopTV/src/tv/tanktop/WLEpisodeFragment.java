@@ -3,6 +3,7 @@ package tv.tanktop;
 import tv.tanktop.db.DBDefinition.WatchListEpisodeTable;
 import tv.tanktop.db.TanktopContentProvider;
 import tv.tanktop.utils.NetImageLoader;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -13,6 +14,8 @@ import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.util.Log;
+import android.view.View;
+import android.widget.ListView;
 
 public class WLEpisodeFragment extends ListFragment implements LoaderCallbacks<Cursor>
 {
@@ -22,6 +25,7 @@ public class WLEpisodeFragment extends ListFragment implements LoaderCallbacks<C
   public static final String ARG_PG_NAME = "pg_name";
 
   private WLEpisodeAdapter mAdapter;
+  private NetImageLoader mImageLoader;
 
   public interface QUERY
   {
@@ -50,7 +54,8 @@ public class WLEpisodeFragment extends ListFragment implements LoaderCallbacks<C
 
     TTContextHolder activity = (TTContextHolder)getActivity();
     TanktopContext context = activity.getContext();
-    mAdapter = new WLEpisodeAdapter(context, new NetImageLoader(context, new Handler()));
+    mImageLoader = new NetImageLoader(context, new Handler());
+    mAdapter = new WLEpisodeAdapter(context, mImageLoader);
     setListAdapter(mAdapter);
 
     getActivity().setTitle(getArguments().getString(ARG_PG_NAME));
@@ -69,6 +74,13 @@ public class WLEpisodeFragment extends ListFragment implements LoaderCallbacks<C
       getLoaderManager().initLoader(0, getArguments(), this);
       setListShown(false);
     }
+  }
+
+  @Override
+  public void onDestroy()
+  {
+    mImageLoader.onDestroy();
+    super.onDestroy();
   }
 
   public Loader<Cursor> onCreateLoader(int id, Bundle args)
@@ -97,6 +109,14 @@ public class WLEpisodeFragment extends ListFragment implements LoaderCallbacks<C
   public void onLoaderReset(Loader<Cursor> loader)
   {
     mAdapter.swapCursor(null);
+  }
+
+  @Override
+  public void onListItemClick(ListView l, View v, int position, long id)
+  {
+    Cursor cursor = (Cursor) getListAdapter().getItem(position);
+
+    startActivity(new Intent(Intent.ACTION_VIEW).setData(Uri.parse(cursor.getString(QUERY.COL_URL))));
   }
 
   public static Fragment newInstance(long id, String pg_name)

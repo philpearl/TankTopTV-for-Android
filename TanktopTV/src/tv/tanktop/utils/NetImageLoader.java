@@ -29,9 +29,15 @@ public class NetImageLoader extends AbstractImageLoader<String>
   }
 
   @Override
+  public void onDestroy()
+  {
+    mHttpLayer.onDestroy();
+    super.onDestroy();
+  }
+
+  @Override
   protected Drawable obtainImage(String id) throws IOException
   {
-    // TODO: Cache to file system!
-    return mHttpLayer.getImage(id);
+    return mHttpLayer.getImageCached(id);
   }
 }

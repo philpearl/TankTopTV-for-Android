@@ -10,13 +10,14 @@ import android.support.v4.widget.CursorAdapter;
 import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 
-public abstract class TimeCursorAdapter extends CursorAdapter
+public abstract class TimeCursorAdapter extends CursorAdapter implements OnClickListener
 {
-
   protected final LayoutInflater mLayoutInflater;
   protected final NetImageLoader mImageLoader;
   protected final DateFormat mTimeFormat;
@@ -36,15 +37,29 @@ public abstract class TimeCursorAdapter extends CursorAdapter
 
   public class Tag
   {
+    int mPosition;
     TextView mName;
     TextView mSynopsis;
     TextView mExpires;
     ImageView mImage;
+    Slider mSlider;
   }
 
   abstract protected int getLayoutId();
 
   abstract protected Tag newTag();
+
+  @Override
+  public View getView(int position, View convertView, ViewGroup parent)
+  {
+    View view = super.getView(position, convertView, parent);
+    Tag tag = (Tag) view.getTag();
+    tag.mPosition = position;
+
+    return view;
+  }
+
+
 
   @Override
   public View newView(Context context, Cursor cursor, ViewGroup parent)
@@ -62,6 +77,13 @@ public abstract class TimeCursorAdapter extends CursorAdapter
     tag.mSynopsis = (TextView) v.findViewById(R.id.synopsis);
     tag.mExpires = (TextView) v.findViewById(R.id.expires);
     tag.mImage = (ImageView) v.findViewById(R.id.image);
+
+    // The Slider touch listener lets us slide the view off the screen
+    // The onClickListener then allows clicks through and translates
+    // to onItemClick
+    tag.mSlider = new Slider();
+    v.setOnClickListener(this);
+    v.setOnTouchListener(tag.mSlider);
   }
 
   protected String formatTime(long time)
@@ -77,4 +99,10 @@ public abstract class TimeCursorAdapter extends CursorAdapter
     }
   }
 
+  public void onClick(View v)
+  {
+    Tag tag = (Tag) v.getTag();
+
+    ((ListView)(v.getParent())).performItemClick(v, tag.mPosition, getItemId(tag.mPosition));
+  }
 }

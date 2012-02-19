@@ -1,6 +1,9 @@
 package tv.tanktop.net;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +24,7 @@ import org.apache.http.protocol.HttpContext;
 import org.json.JSONObject;
 
 import tv.tanktop.TanktopContext;
+import tv.tanktop.utils.HttpUrlCache;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.http.AndroidHttpClient;
@@ -125,5 +129,52 @@ public class HttpLayer
     return mHttpClient.execute(get, responseHandler);
   }
 
+  public Drawable getImageCached(final String url) throws ClientProtocolException, IOException
+  {
+    Log.i(TAG, "get " + url);
+
+    File cacheDir = mContext.getExternalCacheDir();
+    if (cacheDir == null)
+    {
+      cacheDir = mContext.getCacheDir();
+    }
+
+    final File cacheFile = new File(cacheDir, HttpUrlCache.UrlToCacheFileName(url));
+    if (cacheFile.exists())
+    {
+      Log.d(TAG, "load from " + cacheFile.getAbsolutePath());
+      return BitmapDrawable.createFromPath(cacheFile.getAbsolutePath());
+    }
+
+    HttpGet get = new HttpGet(url);
+
+    ResponseHandler<Drawable> responseHandler = new ResponseHandler<Drawable>()
+    {
+      public Drawable handleResponse(HttpResponse response)
+          throws ClientProtocolException, IOException
+      {
+        StatusLine statusLine = response.getStatusLine();
+        Log.d(TAG, "Have response " + statusLine);
+        if (statusLine.getStatusCode() > 299)
+        {
+          throw new HttpResponseException(statusLine.getStatusCode(), statusLine.getReasonPhrase());
+        }
+
+        OutputStream os = new FileOutputStream(cacheFile);
+        try
+        {
+          response.getEntity().writeTo(os);
+        }
+        finally
+        {
+          os.close();
+        }
+
+        return BitmapDrawable.createFromPath(cacheFile.getAbsolutePath());
+      }
+    };
+
+    return mHttpClient.execute(get, responseHandler);
+  }
 
 }
