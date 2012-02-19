@@ -15,7 +15,7 @@ public class TanktopContext extends ContextWrapper
   {
     super(base);
 
-    mBaseUrl = "http://192.168.1.16:8080";
+    mBaseUrl = "http://tanktop.tv";
   }
 
   public String getBaseUrl()
