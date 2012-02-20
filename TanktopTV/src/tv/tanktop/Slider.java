@@ -6,9 +6,16 @@ import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
 import android.view.View.OnTouchListener;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.AnimationSet;
 import android.view.animation.BounceInterpolator;
 import android.view.animation.TranslateAnimation;
 
+/**
+ * Touch listener that allows you to slide a view off the screen and causes the
+ * view to fade as it slides.  The intention is to use it for "slide to delete"
+ */
 public class Slider implements
                    OnTouchListener
 {
@@ -59,15 +66,16 @@ public class Slider implements
         Log.d(TAG, "dist " + dist + " target " + (mScreenWidth *0.5));
         if (dist > (mScreenWidth * 0.5))
         {
+          // Moved more than half of the screen - animate the view off the screen
+          // from here
           mVelocityTracker.computeCurrentVelocity(1); // Pixels per milliseconds
           animateOff(v, event);
           mTracking = false;
         }
         else
         {
-          TranslateAnimation anim = new TranslateAnimation(mLastX - mStartX, event.getX() - mStartX, 0, 0);
-          anim.setDuration(10);
-          anim.setFillAfter(true);
+          // Move the view to follow the user's finger
+          Animation anim = buildAnimation(mLastX, event.getX(), 10);
           v.startAnimation(anim);
           mLastX = event.getX();
         }
@@ -117,6 +125,27 @@ public class Slider implements
     return mTracking;
   }
 
+  /**
+   * Calculate the alpha value for a given x coord. The viw should fade out when
+   * moved about half way
+   * @param x
+   * @return Alpha value 0 invisible, 1 fully visible
+   */
+  private float xToAlpha(float x)
+  {
+    float dist = (Math.abs(x - mStartX));
+    if (dist < mScreenWidth / 2)
+    {
+      return 1  - ((dist * 2) / mScreenWidth);
+    }
+    return 0;
+  }
+
+  /**
+   * Animate the view off the screen at the current velocity
+   * @param v
+   * @param event
+   */
   private void animateOff(View v, MotionEvent event)
   {
     float velocity = mVelocityTracker.getXVelocity();
@@ -131,19 +160,45 @@ public class Slider implements
     //Log.d(TAG, "remaining " + remaining);
     //Log.d(TAG, "duration " + duration);
 
-    TranslateAnimation anim = new TranslateAnimation(event.getX() - mStartX,
-        toTheRight ? mScreenWidth : -mScreenWidth, 0, 0);
-    anim.setDuration(duration);
-    anim.setFillAfter(true);
+    Animation anim = buildAnimation(event.getX(), toTheRight ? mScreenWidth : -mScreenWidth, duration);
     v.startAnimation(anim);
   }
 
+  /**
+   * Animate the view back to its original position
+   * @param v
+   * @param event
+   */
   private void animateBack(View v, MotionEvent event)
   {
-    TranslateAnimation anim = new TranslateAnimation(event.getX() - mStartX, 0, 0, 0);
-    anim.setDuration(500);
-    BounceInterpolator interpolator = new BounceInterpolator();
-    anim.setInterpolator(interpolator);
+    Animation anim = buildAnimation(event.getX(), mStartX, 500);
+    anim.setInterpolator(new BounceInterpolator());
     v.startAnimation(anim);
+  }
+
+  /**
+   * Build an animation that combines sliding the view and fading it
+   * out.
+   * @param startX
+   * @param endX
+   * @param duration duration of animation in ms.
+   * @return An animation set encapsulating the animation
+   */
+  private Animation buildAnimation(float startX, float endX, long duration)
+  {
+    AnimationSet animSet = new AnimationSet(true);
+
+    TranslateAnimation transAnim = new TranslateAnimation(startX - mStartX, endX - mStartX, 0, 0);
+    AlphaAnimation alphaAnim = new AlphaAnimation(xToAlpha(startX), xToAlpha(endX));
+
+    animSet.addAnimation(transAnim);
+    animSet.addAnimation(alphaAnim);
+
+    transAnim.setDuration(duration);
+    alphaAnim.setDuration(duration);
+
+    animSet.setFillAfter(true);
+
+    return animSet;
   }
 }
