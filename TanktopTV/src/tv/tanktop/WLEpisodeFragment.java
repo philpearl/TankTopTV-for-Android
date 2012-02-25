@@ -17,7 +17,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ListView;
 
-public class WLEpisodeFragment extends ListFragment implements LoaderCallbacks<Cursor>
+public class WLEpisodeFragment extends ListFragment implements LoaderCallbacks<Cursor>, ItemEventListener
 {
   private static final String TAG = "WLEpisodeFragment";
 
@@ -55,7 +55,7 @@ public class WLEpisodeFragment extends ListFragment implements LoaderCallbacks<C
     TTContextHolder activity = (TTContextHolder)getActivity();
     TanktopContext context = activity.getContext();
     mImageLoader = new NetImageLoader(context, new Handler());
-    mAdapter = new WLEpisodeAdapter(context, mImageLoader);
+    mAdapter = new WLEpisodeAdapter(context, this, mImageLoader);
     setListAdapter(mAdapter);
 
     getActivity().setTitle(getArguments().getString(ARG_PG_NAME));
@@ -127,5 +127,10 @@ public class WLEpisodeFragment extends ListFragment implements LoaderCallbacks<C
     WLEpisodeFragment frag = new WLEpisodeFragment();
     frag.setArguments(args);
     return frag;
+  }
+
+  public void onDeleteRequest(long id)
+  {
+    Log.d(TAG, "onDeleteRequest " + id);
   }
 }

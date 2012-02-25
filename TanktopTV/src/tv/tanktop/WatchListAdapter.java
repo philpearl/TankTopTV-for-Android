@@ -12,9 +12,9 @@ import android.widget.TextView;
 
 public class WatchListAdapter extends TimeCursorAdapter implements OnClickListener
 {
-  public WatchListAdapter(Context context, NetImageLoader imageLoader)
+  public WatchListAdapter(Context context, ItemEventListener eventListener, NetImageLoader imageLoader)
   {
-    super(context, imageLoader);
+    super(context, eventListener, imageLoader);
   }
 
   @Override

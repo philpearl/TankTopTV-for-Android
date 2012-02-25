@@ -10,9 +10,9 @@ import android.view.View;
 public class WLEpisodeAdapter extends TimeCursorAdapter
 {
 
-  public WLEpisodeAdapter(Context context, NetImageLoader imageLoader)
+  public WLEpisodeAdapter(Context context, ItemEventListener itemEventListener, NetImageLoader imageLoader)
   {
-    super(context, imageLoader);
+    super(context, itemEventListener, imageLoader);
   }
 
   @Override

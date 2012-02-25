@@ -3,10 +3,14 @@ package tv.tanktop;
 import tv.tanktop.db.DBDefinition.WatchListTable;
 import tv.tanktop.db.TanktopContentProvider;
 import tv.tanktop.utils.NetImageLoader;
+import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
@@ -14,13 +18,17 @@ import android.support.v4.content.Loader;
 import android.util.Log;
 import android.view.View;
 import android.widget.ListView;
+import android.widget.TextView;
 
-public class WatchListFragment extends ListFragment implements LoaderCallbacks<Cursor>
+public class WatchListFragment extends ListFragment implements LoaderCallbacks<Cursor>, ItemEventListener
 {
   private static final String TAG = "WatchListFragment";
 
   private TimeCursorAdapter mAdapter;
   private NetImageLoader mImageLoader;
+  private Handler mBackgroundHandler;
+
+  private TextView mHeader;
 
   public interface WATCHLIST_QUERY
   {
@@ -50,8 +58,14 @@ public class WatchListFragment extends ListFragment implements LoaderCallbacks<C
 
     TTContextHolder activity = (TTContextHolder)getActivity();
     TanktopContext context = activity.getContext();
-    mImageLoader = new NetImageLoader(context, new Handler());
-    mAdapter = new WatchListAdapter(context, mImageLoader);
+
+    HandlerThread handlerThread = new HandlerThread(TAG);
+    handlerThread.start();
+
+    mBackgroundHandler = new Handler(handlerThread.getLooper());
+
+    mImageLoader = new NetImageLoader(context, handlerThread, new Handler());
+    mAdapter = new WatchListAdapter(context, this, mImageLoader);
     setListAdapter(mAdapter);
 
     setRetainInstance(true);
@@ -111,5 +125,26 @@ public class WatchListFragment extends ListFragment implements LoaderCallbacks<C
     getActivity().startActivity(new Intent(getActivity(), WLEpisodeActivity.class)
       .putExtra(WLEpisodeFragment.ARG_PG_ID, id)
       .putExtra(WLEpisodeFragment.ARG_PG_NAME, cursor.getString(WATCHLIST_QUERY.COL_PROG_NAME)));
+  }
+
+  public void onDeleteRequest(final long id)
+  {
+    Log.d(TAG, "Delete requested for id " + id);
+    mBackgroundHandler.post(new Runnable()
+    {
+      public void run()
+      {
+        ContentResolver cr = getActivity().getContentResolver();
+
+        Uri uri = ContentUris.withAppendedId(TanktopContentProvider.WATCHLIST_CONTENT_URI, id);
+        int deleted = cr.delete(uri, null, null);
+        Log.d(TAG, "deleted " + deleted);
+
+        // TODO: sync the change up to the server
+
+        cr.notifyChange(uri, null);
+      }
+    });
+
   }
 }

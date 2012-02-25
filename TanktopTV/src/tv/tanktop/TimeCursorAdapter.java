@@ -3,6 +3,7 @@ package tv.tanktop;
 import java.text.DateFormat;
 import java.util.Date;
 
+import tv.tanktop.Slider.OnSlideListener;
 import tv.tanktop.utils.NetImageLoader;
 import android.content.Context;
 import android.database.Cursor;
@@ -16,19 +17,21 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
-public abstract class TimeCursorAdapter extends CursorAdapter implements OnClickListener
+public abstract class TimeCursorAdapter extends CursorAdapter implements OnClickListener, OnSlideListener
 {
   protected final LayoutInflater mLayoutInflater;
   protected final NetImageLoader mImageLoader;
   protected final DateFormat mTimeFormat;
   protected final DateFormat mDateFormat;
   private final Date mDate = new Date();
+  protected final ItemEventListener mItemEventListener;
 
-  public TimeCursorAdapter(Context context, NetImageLoader imageLoader)
+  public TimeCursorAdapter(Context context, ItemEventListener eventListener, NetImageLoader imageLoader)
   {
     super(context, null, 0);
     mLayoutInflater = LayoutInflater.from(context);
     mImageLoader = imageLoader;
+    mItemEventListener = eventListener;
 
     mTimeFormat = android.text.format.DateFormat.getTimeFormat(mContext);
     mDateFormat = android.text.format.DateFormat.getMediumDateFormat(mContext);
@@ -37,7 +40,10 @@ public abstract class TimeCursorAdapter extends CursorAdapter implements OnClick
 
   public class Tag
   {
+    // This position may not be reliable after the list has been updated
     int mPosition;
+    long mId;
+
     TextView mName;
     TextView mSynopsis;
     TextView mExpires;
@@ -55,11 +61,12 @@ public abstract class TimeCursorAdapter extends CursorAdapter implements OnClick
     View view = super.getView(position, convertView, parent);
     Tag tag = (Tag) view.getTag();
     tag.mPosition = position;
+    tag.mId = getItemId(position);
+
+    view.clearAnimation();
 
     return view;
   }
-
-
 
   @Override
   public View newView(Context context, Cursor cursor, ViewGroup parent)
@@ -81,7 +88,7 @@ public abstract class TimeCursorAdapter extends CursorAdapter implements OnClick
     // The Slider touch listener lets us slide the view off the screen
     // The onClickListener then allows clicks through and translates
     // to onItemClick
-    tag.mSlider = new Slider();
+    tag.mSlider = new Slider(v, this);
     v.setOnClickListener(this);
     v.setOnTouchListener(tag.mSlider);
   }
@@ -103,6 +110,13 @@ public abstract class TimeCursorAdapter extends CursorAdapter implements OnClick
   {
     Tag tag = (Tag) v.getTag();
 
-    ((ListView)(v.getParent())).performItemClick(v, tag.mPosition, getItemId(tag.mPosition));
+    ((ListView)(v.getParent())).performItemClick(v, tag.mPosition, tag.mId);
+  }
+
+  public void onSlideComplete(View v)
+  {
+    Tag tag = (Tag) v.getTag();
+
+    mItemEventListener.onDeleteRequest(tag.mId);
   }
 }
