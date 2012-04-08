@@ -25,6 +25,8 @@ public class Slider implements
 
   private static final float MIN_VELOCITY = 2.0f; // pixels/ms
   private static final float TARGET_WIDTH = 0.66f;
+  // Fraction of target width after which we block other touch gestures
+  private static final float THRESHOLD_WIDTH = 0.1f;
 
   private boolean mTracking;
   private float mStartX;
@@ -79,6 +81,11 @@ public class Slider implements
         float dist = Math.abs(event.getX() - mStartX);
 
         mMaxDist = Math.max(mMaxDist, dist);
+
+        if (dist > mTargetDist * THRESHOLD_WIDTH)
+        {
+          mView.getParent().requestDisallowInterceptTouchEvent(true);
+        }
 
         //Log.d(TAG, "dist " + dist + " target " + (mScreenWidth *0.5));
         // Move the view to follow the user's finger
