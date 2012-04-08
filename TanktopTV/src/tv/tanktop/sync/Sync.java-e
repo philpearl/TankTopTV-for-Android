@@ -51,7 +51,7 @@ public class Sync
       httpLayer.login(store.getUserName(), store.getPassword());
 
       ContentResolver cr = mContext.getContentResolver();
-      ContentValues values = new ContentValues(7);
+      ContentValues values = new ContentValues(8);
 
       // Look for episodes marked as watched
       Cursor cursor = cr.query(TanktopContentProvider.addCallerIsSyncParam(TanktopContentProvider.WATCHLIST_EPISODE_CONTENT_URI),
@@ -127,7 +127,7 @@ public class Sync
         if (updated == 0)
         {
           Uri newuri = cr.insert(TanktopContentProvider.addCallerIsSyncParam(TanktopContentProvider.WATCHLIST_CONTENT_URI), values);
-          Log.d(TAG, "uri " + uri);
+          Log.d(TAG, "uri " + newuri);
         }
 
         for (int jndex = 0; jndex < episodes.length(); jndex++)
@@ -151,7 +151,7 @@ public class Sync
           if (updated == 0)
           {
             Uri newuri = cr.insert(TanktopContentProvider.addCallerIsSyncParam(TanktopContentProvider.WATCHLIST_EPISODE_CONTENT_URI), values);
-            Log.d(TAG, "uri " + uri);
+            Log.d(TAG, "uri " + newuri);
           }
         }
       }
