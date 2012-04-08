@@ -1,12 +1,13 @@
 package tv.tanktop;
 
+import tv.tanktop.sync.SyncService;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 
 public class TanktopTVActivity extends FragmentActivity implements TTContextHolder
 {
   private TanktopContext mContext;
-  private RefreshWatchlistTask mRefreshWatchlistTask;
   @Override
   public void onCreate(Bundle savedInstanceState)
   {
@@ -18,8 +19,7 @@ public class TanktopTVActivity extends FragmentActivity implements TTContextHold
 
     if (savedInstanceState == null)
     {
-      mRefreshWatchlistTask = new RefreshWatchlistTask(mContext);
-      mRefreshWatchlistTask.execute();
+      startService(new Intent(this, SyncService.class));
     }
   }
 
@@ -31,10 +31,6 @@ public class TanktopTVActivity extends FragmentActivity implements TTContextHold
   @Override
   protected void onDestroy()
   {
-    if ((isFinishing()) && (mRefreshWatchlistTask != null))
-    {
-      mRefreshWatchlistTask.cancel(false);
-    }
     super.onDestroy();
   }
 }

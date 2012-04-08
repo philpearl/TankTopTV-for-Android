@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -104,6 +105,48 @@ public class HttpLayer
     HttpGet get = new HttpGet(mBaseUrl + "/api/v1/watchlist");
 
     return mHttpClient.execute(get, mResponseHandler, mHttpContext);
+  }
+
+  public void markEpisodeSeen(long episodeId) throws ClientProtocolException, IOException
+  {
+    HttpPost post = new HttpPost(mBaseUrl + "/seen");
+
+    List<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>(3);
+
+    params.add(new BasicNameValuePair("id", String.valueOf(episodeId)));
+    params.add(new BasicNameValuePair("json", "true"));
+
+    try
+    {
+      post.setEntity(new UrlEncodedFormEntity(params));
+    }
+    catch (UnsupportedEncodingException e)
+    {
+      // Nah, won't happen
+    }
+
+    mHttpClient.execute(post, mResponseHandler, mHttpContext);
+  }
+
+  public void removeFromWatchlist(long progId) throws ClientProtocolException, IOException
+  {
+    HttpPost post = new HttpPost(mBaseUrl + "/unfavourite");
+
+    List<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>(3);
+
+    params.add(new BasicNameValuePair("id", String.valueOf(progId)));
+    params.add(new BasicNameValuePair("json", "true"));
+
+    try
+    {
+      post.setEntity(new UrlEncodedFormEntity(params));
+    }
+    catch (UnsupportedEncodingException e)
+    {
+      // Nah, won't happen
+    }
+
+    mHttpClient.execute(post, mResponseHandler, mHttpContext);
   }
 
   public Drawable getImage(String url) throws ClientProtocolException, IOException

@@ -1,4 +1,4 @@
-package tv.tanktop;
+package tv.tanktop.sync;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -10,6 +10,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import tv.tanktop.TanktopContext;
+import tv.tanktop.TanktopStore;
 import tv.tanktop.db.DBDefinition.WatchListEpisodeTable;
 import tv.tanktop.db.DBDefinition.WatchListTable;
 import tv.tanktop.db.TanktopContentProvider;
@@ -17,52 +19,87 @@ import tv.tanktop.net.HttpLayer;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.util.Log;
 
-// TODO: Threadedness
-public class RefreshWatchlistTask extends AsyncTask<String, Void, Void>
+public class Sync
 {
-  private static final String TAG = "RefreshWatchList";
-
+  private static final String TAG = "Sync";
   private final TanktopContext mContext;
-  private final TanktopStore mStore;
   private final SimpleDateFormat mExpiryDateFormat;
 
-  public RefreshWatchlistTask(TanktopContext context)
+  public Sync(TanktopContext context)
   {
     mContext = context;
-
-    mStore = mContext.getStore();
-
     // TODO: probably want a GMT locale somehow??
     mExpiryDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.UK);
   }
 
-  @Override
-  protected Void doInBackground(String... params)
+  public void run()
   {
-    Log.d(TAG, "doInBackground");
-    // New HTTP layer for each call
-    HttpLayer httpLayer = mContext.getHttpLayer();
+    HttpLayer httpLayer = mContext.newHttpLayer();
+    TanktopStore store = mContext.getStore();
+
+    // Login
+    // Find episodes to mark watched
+    // Find programmes to unfavourite
+    // update the DB
+
     try
     {
-      httpLayer.login(mStore.getUserName(), mStore.getPassword());
+      httpLayer.login(store.getUserName(), store.getPassword());
 
+      ContentResolver cr = mContext.getContentResolver();
+      ContentValues values = new ContentValues(7);
+
+      // Look for episodes marked as watched
+      Cursor cursor = cr.query(TanktopContentProvider.addCallerIsSyncParam(TanktopContentProvider.WATCHLIST_EPISODE_CONTENT_URI),
+          new String[] {
+            WatchListEpisodeTable.COL_EPISODE_ID
+          },
+          WatchListEpisodeTable.COL_DELETED + " = 1", null, null);
+      try
+      {
+        while (cursor.moveToNext())
+        {
+          httpLayer.markEpisodeSeen(cursor.getLong(0));
+        }
+      }
+      finally
+      {
+        cursor.close();
+      }
+
+      // Look for programmes to unfavourite
+      cursor = cr.query(TanktopContentProvider.addCallerIsSyncParam(TanktopContentProvider.WATCHLIST_CONTENT_URI),
+          new String[] {
+            WatchListTable.COL_PROGRAMME_ID
+          },
+          WatchListTable.COL_DELETED + " = 1", null, null);
+      try
+      {
+        while (cursor.moveToNext())
+        {
+          httpLayer.removeFromWatchlist(cursor.getLong(0));
+        }
+      }
+      finally
+      {
+        cursor.close();
+      }
+
+      // Pull down changes to the watchlist
       JSONObject watchlist = httpLayer.getWatchList();
 
       Log.d(TAG, watchlist.toString(2));
 
       JSONArray array = watchlist.getJSONArray("watchlist");
 
-      ContentResolver cr = mContext.getContentResolver();
-      ContentValues values = new ContentValues(7);
-
       // Mark items as untouched
       values.put(WatchListTable.COL_TOUCHED, 0);
-      cr.update(TanktopContentProvider.WATCHLIST_CONTENT_URI, values, null, null);
-      cr.update(TanktopContentProvider.WATCHLIST_EPISODE_CONTENT_URI, values, null, null);
+      cr.update(TanktopContentProvider.addCallerIsSyncParam(TanktopContentProvider.WATCHLIST_CONTENT_URI), values, null, null);
+      cr.update(TanktopContentProvider.addCallerIsSyncParam(TanktopContentProvider.WATCHLIST_EPISODE_CONTENT_URI), values, null, null);
 
       for (int index = 0; index < array.length(); index++)
       {
@@ -84,11 +121,12 @@ public class RefreshWatchlistTask extends AsyncTask<String, Void, Void>
 
         values.put(WatchListTable.COL_EPISODE_COUNT, episodes.length());
 
-        int updated = cr.update(ContentUris.withAppendedId(TanktopContentProvider.WATCHLIST_CONTENT_URI, id), values, null, null);
+        Uri uri = TanktopContentProvider.addCallerIsSyncParam(ContentUris.withAppendedId(TanktopContentProvider.WATCHLIST_CONTENT_URI, id));
+        int updated = cr.update(uri, values, null, null);
         Log.d(TAG, "updated " + updated);
         if (updated == 0)
         {
-          Uri uri = cr.insert(TanktopContentProvider.WATCHLIST_CONTENT_URI, values);
+          Uri newuri = cr.insert(TanktopContentProvider.addCallerIsSyncParam(TanktopContentProvider.WATCHLIST_CONTENT_URI), values);
           Log.d(TAG, "uri " + uri);
         }
 
@@ -108,21 +146,20 @@ public class RefreshWatchlistTask extends AsyncTask<String, Void, Void>
           expires = episodes.getJSONObject(0).getString("expires");
           values.put(WatchListEpisodeTable.COL_EXPIRES, parseExpiry(expires));
 
-          updated = cr.update(ContentUris.withAppendedId(TanktopContentProvider.WATCHLIST_EPISODE_CONTENT_URI, ep_id), values, null, null);
+          updated = cr.update(TanktopContentProvider.addCallerIsSyncParam(ContentUris.withAppendedId(TanktopContentProvider.WATCHLIST_EPISODE_CONTENT_URI, ep_id)), values, null, null);
           Log.d(TAG, "ep updated " + updated);
           if (updated == 0)
           {
-            Uri uri = cr.insert(TanktopContentProvider.WATCHLIST_EPISODE_CONTENT_URI, values);
+            Uri newuri = cr.insert(TanktopContentProvider.addCallerIsSyncParam(TanktopContentProvider.WATCHLIST_EPISODE_CONTENT_URI), values);
             Log.d(TAG, "uri " + uri);
           }
-
         }
       }
 
       // Delete anything that's still untouched
-      int deleted = cr.delete(TanktopContentProvider.WATCHLIST_CONTENT_URI, WatchListTable.COL_TOUCHED + "=0", null);
+      int deleted = cr.delete(TanktopContentProvider.addCallerIsSyncParam(TanktopContentProvider.WATCHLIST_CONTENT_URI), WatchListTable.COL_TOUCHED + "=0", null);
       Log.d(TAG, "deleted " + deleted);
-      deleted = cr.delete(TanktopContentProvider.WATCHLIST_EPISODE_CONTENT_URI, WatchListTable.COL_TOUCHED + "=0", null);
+      deleted = cr.delete(TanktopContentProvider.addCallerIsSyncParam(TanktopContentProvider.WATCHLIST_EPISODE_CONTENT_URI), WatchListTable.COL_TOUCHED + "=0", null);
       Log.d(TAG, "eps deleted " + deleted);
 
       cr.notifyChange(TanktopContentProvider.WATCHLIST_CONTENT_URI, null);
@@ -143,8 +180,6 @@ public class RefreshWatchlistTask extends AsyncTask<String, Void, Void>
     {
       httpLayer.onDestroy();
     }
-
-    return null;
   }
 
   private long parseExpiry(String expiry)
@@ -158,4 +193,5 @@ public class RefreshWatchlistTask extends AsyncTask<String, Void, Void>
       return 0;
     }
   }
+
 }

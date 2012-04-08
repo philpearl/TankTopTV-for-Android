@@ -18,7 +18,6 @@ import android.support.v4.content.Loader;
 import android.util.Log;
 import android.view.View;
 import android.widget.ListView;
-import android.widget.TextView;
 
 public class WatchListFragment extends ListFragment implements LoaderCallbacks<Cursor>, ItemEventListener
 {
@@ -27,8 +26,6 @@ public class WatchListFragment extends ListFragment implements LoaderCallbacks<C
   private TimeCursorAdapter mAdapter;
   private NetImageLoader mImageLoader;
   private Handler mBackgroundHandler;
-
-  private TextView mHeader;
 
   public interface WATCHLIST_QUERY
   {
@@ -47,7 +44,6 @@ public class WatchListFragment extends ListFragment implements LoaderCallbacks<C
     public static final int COL_IMAGE = 3;
     public static final int COL_EXPIRES = 4;
     public static final int COL_EPISODE_COUNT = 5;
-
   }
 
   @Override
@@ -139,8 +135,6 @@ public class WatchListFragment extends ListFragment implements LoaderCallbacks<C
         Uri uri = ContentUris.withAppendedId(TanktopContentProvider.WATCHLIST_CONTENT_URI, id);
         int deleted = cr.delete(uri, null, null);
         Log.d(TAG, "deleted " + deleted);
-
-        // TODO: sync the change up to the server
 
         cr.notifyChange(uri, null);
       }

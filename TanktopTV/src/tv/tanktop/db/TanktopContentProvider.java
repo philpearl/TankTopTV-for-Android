@@ -2,10 +2,12 @@ package tv.tanktop.db;
 
 import tv.tanktop.db.DBDefinition.WatchListEpisodeTable;
 import tv.tanktop.db.DBDefinition.WatchListTable;
+import tv.tanktop.sync.SyncService;
 import android.content.ContentProvider;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Intent;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -27,9 +29,9 @@ public class TanktopContentProvider extends ContentProvider
   private static final UriMatcher sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
   private static final int MATCH_WATCHLIST = 1;
   private static final int MATCH_WATCHLIST_ID = 2;
-  private static final int MATCH_WATCHLIST_ID_EPISODES = 3; //TODO implement this match
-  private static final int MATCH_WATCHLIST_EPISODES = 4; //TODO implement this match
-  private static final int MATCH_WATCHLIST_EPISODES_ID = 5; //TODO implement this match
+  private static final int MATCH_WATCHLIST_ID_EPISODES = 3;
+  private static final int MATCH_WATCHLIST_EPISODES = 4;
+  private static final int MATCH_WATCHLIST_EPISODES_ID = 5;
   static
   {
     sUriMatcher.addURI(AUTHORITY, "watchlist", MATCH_WATCHLIST);
@@ -38,6 +40,8 @@ public class TanktopContentProvider extends ContentProvider
     sUriMatcher.addURI(AUTHORITY, "watchlist/episodes", MATCH_WATCHLIST_EPISODES);
     sUriMatcher.addURI(AUTHORITY, "watchlist/episodes/#", MATCH_WATCHLIST_EPISODES_ID);
   }
+
+  public static final String CALLER_IS_SYNC = "callerIsSync";
 
   private DBOpenHelper mOpenHelper;
 
@@ -52,7 +56,26 @@ public class TanktopContentProvider extends ContentProvider
     Log.d(TAG, "delete " + table + " " + selection);
 
     SQLiteDatabase db = mOpenHelper.getWritableDatabase();
-    return db.delete(table, selection, selectionArgs);
+
+    if (isCallerSync(uri))
+    {
+      return db.delete(table, selection, selectionArgs);
+    }
+
+    // Not called by the sync thread
+    // Just mark as deleted
+    ContentValues values = new ContentValues(1);
+    values.put(WatchListTable.COL_DELETED, 1); // same for both tables
+    int updates = db.update(table, values, selection, selectionArgs);
+
+    // Kick off the sync thread to do a sync
+    if (updates != 0)
+    {
+      getContext().startService(new Intent(getContext(), SyncService.class));
+      getContext().getContentResolver().notifyChange(uri, null);
+    }
+
+    return updates;
   }
 
   @Override
@@ -155,10 +178,7 @@ public class TanktopContentProvider extends ContentProvider
       return selection;
     }
 
-    if (selection != null)
-    {
-      sb.append("(");
-    }
+    sb.append("(");
 
     switch (match)
     {
@@ -181,7 +201,29 @@ public class TanktopContentProvider extends ContentProvider
     {
       sb.append(") AND (").append(selection).append(")");
     }
+    else
+    {
+      sb.append(")");
+    }
+
+    if (!isCallerSync(uri))
+    {
+      // Caller is not sync adapter, so don't return deleted rows
+      sb.append(" AND (").append(WatchListTable.COL_DELETED).append(" = 0)");
+    }
 
     return sb.toString();
+  }
+
+  public boolean isCallerSync(Uri uri)
+  {
+    return "true".equals(uri.getQueryParameter(CALLER_IS_SYNC));
+  }
+
+  public static Uri addCallerIsSyncParam(Uri uri)
+  {
+    return uri.buildUpon()
+    .appendQueryParameter(CALLER_IS_SYNC, "true")
+    .build();
   }
 }

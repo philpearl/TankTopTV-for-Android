@@ -24,6 +24,7 @@ public final class DBDefinition
     public static final String COL_TOUCHED = "touched";
     public static final String COL_EXPIRES = "expires";
     public static final String COL_EPISODE_COUNT = "ep_count";
+    public static final String COL_DELETED = "deleted";
 
     public static final Table TABLE = new Table(NAME)
     .addColumn(new PrimaryKey(COL_PROGRAMME_ID))
@@ -33,6 +34,7 @@ public final class DBDefinition
     .addColumn(new BoolColumn(COL_TOUCHED))
     .addColumn(new IntColumn(COL_EXPIRES))
     .addColumn(new IntColumn(COL_EPISODE_COUNT))
+    .addColumn(new BoolColumn(COL_DELETED, false))
     ;
   }
 
@@ -48,6 +50,7 @@ public final class DBDefinition
     public static final String COL_TOUCHED = "touched";
     public static final String COL_EXPIRES = "expires";
     public static final String COL_URL = "url";
+    public static final String COL_DELETED = "deleted";
 
     public static final Table TABLE = new Table(NAME)
     .addColumn(new PrimaryKey(COL_EPISODE_ID))
@@ -58,6 +61,7 @@ public final class DBDefinition
     .addColumn(new TextColumn(COL_SYNOPSIS))
     .addColumn(new BoolColumn(COL_TOUCHED))
     .addColumn(new IntColumn(COL_EXPIRES))
+    .addColumn(new BoolColumn(COL_DELETED, false))
     ;
   }
 }

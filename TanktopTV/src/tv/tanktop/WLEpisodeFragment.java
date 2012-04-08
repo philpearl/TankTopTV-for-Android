@@ -3,11 +3,14 @@ package tv.tanktop;
 import tv.tanktop.db.DBDefinition.WatchListEpisodeTable;
 import tv.tanktop.db.TanktopContentProvider;
 import tv.tanktop.utils.NetImageLoader;
+import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
@@ -26,6 +29,9 @@ public class WLEpisodeFragment extends ListFragment implements LoaderCallbacks<C
 
   private WLEpisodeAdapter mAdapter;
   private NetImageLoader mImageLoader;
+
+  private Handler mBackgroundHandler;
+  private Uri mQueryUri;
 
   public interface QUERY
   {
@@ -51,6 +57,11 @@ public class WLEpisodeFragment extends ListFragment implements LoaderCallbacks<C
   {
     super.onCreate(savedInstanceState);
     Log.d(TAG, "onCreate");
+
+    HandlerThread handlerThread = new HandlerThread(TAG);
+    handlerThread.start();
+
+    mBackgroundHandler = new Handler(handlerThread.getLooper());
 
     TTContextHolder activity = (TTContextHolder)getActivity();
     TanktopContext context = activity.getContext();
@@ -86,9 +97,9 @@ public class WLEpisodeFragment extends ListFragment implements LoaderCallbacks<C
   public Loader<Cursor> onCreateLoader(int id, Bundle args)
   {
     long pg_id = args.getLong(ARG_PG_ID);
-    Uri uri = TanktopContentProvider.WATCHLIST_CONTENT_URI.buildUpon().appendPath(Long.toString(pg_id)).appendPath("episodes").build();
+    mQueryUri = TanktopContentProvider.WATCHLIST_CONTENT_URI.buildUpon().appendPath(Long.toString(pg_id)).appendPath("episodes").build();
     return new CursorLoader(getActivity(),
-        uri,
+        mQueryUri,
         QUERY.PROJECTION, null, null, null);
   }
 
@@ -129,8 +140,23 @@ public class WLEpisodeFragment extends ListFragment implements LoaderCallbacks<C
     return frag;
   }
 
-  public void onDeleteRequest(long id)
+  public void onDeleteRequest(final long id)
   {
     Log.d(TAG, "onDeleteRequest " + id);
+    mBackgroundHandler.post(new Runnable()
+    {
+      public void run()
+      {
+        ContentResolver cr = getActivity().getContentResolver();
+
+        Uri uri = ContentUris.withAppendedId(TanktopContentProvider.WATCHLIST_EPISODE_CONTENT_URI, id);
+        int deleted = cr.delete(uri, null, null);
+        Log.d(TAG, "deleted " + deleted);
+
+        // Hmm, our query URI is a bit different to what we just deleted so we notify it
+        // ourselves.
+        cr.notifyChange(mQueryUri, null);
+      }
+    });
   }
 }

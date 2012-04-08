@@ -30,6 +30,11 @@
             android:name="tv.tanktop.db.TanktopContentProvider"
             android:exported="false">            
         </provider>
+        
+        <service
+            android:name="tv.tanktop.sync.SyncService" 
+            >            
+        </service>
     </application>
 
 </manifest>
