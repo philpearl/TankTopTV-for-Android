@@ -135,8 +135,6 @@ public class WatchListFragment extends ListFragment implements LoaderCallbacks<C
         Uri uri = ContentUris.withAppendedId(TanktopContentProvider.WATCHLIST_CONTENT_URI, id);
         int deleted = cr.delete(uri, null, null);
         Log.d(TAG, "deleted " + deleted);
-
-        cr.notifyChange(uri, null);
       }
     });
 

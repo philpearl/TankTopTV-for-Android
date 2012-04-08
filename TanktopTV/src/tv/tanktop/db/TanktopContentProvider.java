@@ -172,16 +172,16 @@ public class TanktopContentProvider extends ContentProvider
   {
     StringBuilder sb = new StringBuilder();
 
-    if ((match == MATCH_WATCHLIST) || (match == MATCH_WATCHLIST_EPISODES))
-    {
-      // No modification
-      return selection;
-    }
-
+    // Build a predicate before the requested selection
     sb.append("(");
 
     switch (match)
     {
+    case MATCH_WATCHLIST:
+    case MATCH_WATCHLIST_EPISODES:
+      sb.append("1=1");
+      break;
+
     case MATCH_WATCHLIST_ID:
       // Alter query to ensure the ID is selected
       sb.append(WatchListTable.COL_PROGRAMME_ID).append(" = ").append(uri.getLastPathSegment());
