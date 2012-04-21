@@ -24,7 +24,7 @@ public class WatchListAdapter extends TimeCursorAdapter implements OnClickListen
 
     tag.mName.setText(cursor.getString(WATCHLIST_QUERY.COL_PROG_NAME));
     tag.mSynopsis.setText(Html.fromHtml(cursor.getString(WATCHLIST_QUERY.COL_SYNOPSIS)));
-    tag.mExpires.setText(formatTime(cursor.getLong(WATCHLIST_QUERY.COL_EXPIRES)));
+    tag.mExpires.setText(formatExpiryTime(cursor.getLong(WATCHLIST_QUERY.COL_EXPIRES)));
     tag.mImage.setImageDrawable(mImageLoader.getImage(cursor.getString(WATCHLIST_QUERY.COL_IMAGE), tag.mImage));
     tag.mEpCount.setText(new StringBuilder("(").append(cursor.getInt(WATCHLIST_QUERY.COL_EPISODE_COUNT)).append(")").toString());
   }

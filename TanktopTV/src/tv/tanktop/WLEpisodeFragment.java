@@ -72,6 +72,7 @@ public class WLEpisodeFragment extends ListFragment implements LoaderCallbacks<C
     getActivity().setTitle(getArguments().getString(ARG_PG_NAME));
 
     setRetainInstance(true);
+    setHasOptionsMenu(false);
   }
 
   @Override

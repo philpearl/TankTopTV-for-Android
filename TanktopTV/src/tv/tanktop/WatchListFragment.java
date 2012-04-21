@@ -5,12 +5,12 @@ import tv.tanktop.db.TanktopContentProvider;
 import tv.tanktop.utils.NetImageLoader;
 import android.content.ContentResolver;
 import android.content.ContentUris;
-import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
@@ -65,6 +65,7 @@ public class WatchListFragment extends ListFragment implements LoaderCallbacks<C
     setListAdapter(mAdapter);
 
     setRetainInstance(true);
+    setHasOptionsMenu(false);
   }
 
   @Override
@@ -118,10 +119,19 @@ public class WatchListFragment extends ListFragment implements LoaderCallbacks<C
   {
     Cursor cursor = (Cursor) getListAdapter().getItem(position);
 
-    // TODO: Swap in fragment??
-    getActivity().startActivity(new Intent(getActivity(), WLEpisodeActivity.class)
-      .putExtra(WLEpisodeFragment.ARG_PG_ID, id)
-      .putExtra(WLEpisodeFragment.ARG_PG_NAME, cursor.getString(WATCHLIST_QUERY.COL_PROG_NAME)));
+    // Swap in fragment
+    WLEpisodeFragment fragment = new WLEpisodeFragment();
+    Bundle args = new Bundle();
+    args.putLong(WLEpisodeFragment.ARG_PG_ID, id);
+    args.putString(WLEpisodeFragment.ARG_PG_NAME, cursor.getString(WATCHLIST_QUERY.COL_PROG_NAME));
+    fragment.setArguments(args);
+
+    getFragmentManager().beginTransaction()
+    .hide(this)
+    .add(R.id.fragment1, fragment)
+    .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+    .addToBackStack(null)
+    .commit();
   }
 
   public void onDeleteRequest(final long id)
@@ -138,6 +148,5 @@ public class WatchListFragment extends ListFragment implements LoaderCallbacks<C
         Log.d(TAG, "deleted " + deleted);
       }
     });
-
   }
 }

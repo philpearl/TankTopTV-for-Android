@@ -22,7 +22,7 @@ public class WLEpisodeAdapter extends TimeCursorAdapter
 
     tag.mName.setText(cursor.getString(QUERY.COL_EPISODE_NAME));
     tag.mSynopsis.setText(Html.fromHtml(cursor.getString(QUERY.COL_SYNOPSIS)));
-    tag.mExpires.setText(formatTime(cursor.getLong(QUERY.COL_EXPIRES)));
+    tag.mExpires.setText(formatExpiryTime(cursor.getLong(QUERY.COL_EXPIRES)));
     tag.mImage.setImageDrawable(mImageLoader.getImage(cursor.getString(QUERY.COL_IMAGE), tag.mImage));
   }
 
