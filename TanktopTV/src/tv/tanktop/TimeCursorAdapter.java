@@ -93,8 +93,12 @@ public abstract class TimeCursorAdapter extends CursorAdapter implements OnClick
     v.setOnTouchListener(tag.mSlider);
   }
 
-  protected String formatTime(long time)
+  protected String formatExpiryTime(long time)
   {
+    if (time == 0)
+    {
+      return mContext.getString(R.string.no_expiry);
+    }
     mDate.setTime(time);
     if (DateUtils.isToday(time))
     {
