@@ -27,12 +27,12 @@
         
         <provider 
             android:authorities="tv.tanktop.provider"
-            android:name="tv.tanktop.db.TanktopContentProvider"
+            android:name=".db.TanktopContentProvider"
             android:exported="false">            
         </provider>
         
         <service
-            android:name="tv.tanktop.sync.SyncService" 
+            android:name=".service.SyncService" 
             >            
         </service>
     </application>

@@ -1,4 +1,4 @@
-package tv.tanktop.sync;
+package tv.tanktop.service;
 
 import java.io.IOException;
 import java.text.ParseException;

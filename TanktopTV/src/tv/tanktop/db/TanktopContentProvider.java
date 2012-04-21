@@ -2,7 +2,7 @@ package tv.tanktop.db;
 
 import tv.tanktop.db.DBDefinition.WatchListEpisodeTable;
 import tv.tanktop.db.DBDefinition.WatchListTable;
-import tv.tanktop.sync.SyncService;
+import tv.tanktop.service.SyncService;
 import android.content.ContentProvider;
 import android.content.ContentResolver;
 import android.content.ContentUris;

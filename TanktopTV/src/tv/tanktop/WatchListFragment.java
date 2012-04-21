@@ -118,6 +118,7 @@ public class WatchListFragment extends ListFragment implements LoaderCallbacks<C
   {
     Cursor cursor = (Cursor) getListAdapter().getItem(position);
 
+    // TODO: Swap in fragment??
     getActivity().startActivity(new Intent(getActivity(), WLEpisodeActivity.class)
       .putExtra(WLEpisodeFragment.ARG_PG_ID, id)
       .putExtra(WLEpisodeFragment.ARG_PG_NAME, cursor.getString(WATCHLIST_QUERY.COL_PROG_NAME)));
