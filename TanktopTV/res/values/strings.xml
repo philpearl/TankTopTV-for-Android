@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <string name="app_name">TanktopTV</string>
     <string name="no_expiry">no expiry</string>
 
 </resources>
